@@ -4940,6 +4940,14 @@ function App() {
 
                   </div>
 
+                  <button
+                    type="button"
+                    onClick={() => window.location.reload()}
+                    className="mt-5 w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                  >
+                    ↻ Refresh App
+                  </button>
+
                 </section>
 
                 {/* DANGER ZONE */}
@@ -5017,8 +5025,8 @@ function App() {
               key={item}
               onClick={() => setPage(item)}
               className={`min-w-0 px-0.5 py-3 text-xs font-medium leading-tight ${page === item
-                  ? 'text-slate-900'
-                  : 'text-slate-400'
+                ? 'text-slate-900'
+                : 'text-slate-400'
                 }`}
             >
               <span className="block truncate">
