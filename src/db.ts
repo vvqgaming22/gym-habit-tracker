@@ -11,6 +11,7 @@ export interface Workout {
     date: string
     topic: string
     createdAt: Date
+    status: 'draft' | 'in_progress' | 'done'
 }
 
 export interface WorkoutExercise {
@@ -94,7 +95,7 @@ class GymHabitDatabase extends Dexie {
             habits: '++id, name, createdAt',
             habitCompletions: '++id, habitId, date, [habitId+date]',
         })
-        this.version(5).stores({
+        this.version(6).stores({
             exercises: '++id, name, createdAt',
             workouts: '++id, date, createdAt',
             workoutExercises: '++id, workoutId, exerciseId, order',
@@ -109,6 +110,15 @@ class GymHabitDatabase extends Dexie {
                 .modify(habit => {
                     if (!Array.isArray(habit.schedule)) {
                         habit.schedule = [0, 1, 2, 3, 4, 5, 6]
+                    }
+                })
+
+            await tx
+                .table('workouts')
+                .toCollection()
+                .modify(workout => {
+                    if (!workout.status) {
+                        workout.status = 'in_progress'
                     }
                 })
         })

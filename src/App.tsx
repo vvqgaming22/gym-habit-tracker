@@ -47,11 +47,14 @@ const formatDate = (date: string) => {
 
 function App() {
   const [page, setPage] = useState<Page>('Dashboard')
-
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [habits, setHabits] = useState<Habit[]>([])
   const [completions, setCompletions] = useState<HabitCompletion[]>([])
+  const [exerciseLibraryOpen, setExerciseLibraryOpen] = useState(true)
+  const [exerciseDeletionEnabled, setExerciseDeletionEnabled] = useState(
+    localStorage.getItem('exerciseDeletionEnabled') === 'true'
+  )
 
   const [currentWorkoutId, setCurrentWorkoutId] =
     useState<number | null>(null)
@@ -173,6 +176,11 @@ function App() {
 
     if (!name) return
 
+    if (habitSchedule.length === 0) {
+      alert('Hãy chọn ít nhất 1 ngày.')
+      return
+    }
+
     const exists = await db.habits
       .where('name')
       .equalsIgnoreCase(name)
@@ -282,7 +290,7 @@ function App() {
   function calculateStreak(habitId: number) {
     const habit = habits.find(item => item.id === habitId)
 
-    if (!habit) return 0
+    if (!habit || habit.schedule.length === 0) return 0
 
     let date = new Date()
     let streak = 0
@@ -419,14 +427,17 @@ function App() {
 
     if (usedInWorkout) {
       alert(
-        `Không thể xóa "${exercise.name}" vì exercise này đã được sử dụng trong lịch sử workout.\n\n` +
-        `Giữ lại exercise sẽ đảm bảo dữ liệu lịch sử không bị mất.`
+        `Không thể xóa "${exercise.name}".\n\n` +
+        `Exercise này đã được sử dụng trong lịch sử workout.\n\n` +
+        `Giữ lại exercise để đảm bảo dữ liệu workout cũ không bị mất.`
       )
       return
     }
 
-    const confirmed = confirm(
-      `Xóa exercise "${exercise.name}"?`
+    const confirmed = window.confirm(
+      `Xóa "${exercise.name}" khỏi Exercise Library?\n\n` +
+      `Exercise này chưa được sử dụng trong workout nên có thể xóa an toàn.\n\n` +
+      `Bạn có chắc muốn tiếp tục?`
     )
 
     if (!confirmed) return
@@ -435,6 +446,7 @@ function App() {
 
     await loadData()
   }
+
   /* =========================
      WORKOUT
   ========================= */
@@ -459,6 +471,7 @@ function App() {
       date: workoutDate,
       topic: workoutTopic.trim(),
       createdAt: new Date(),
+      status: 'draft',
     })
 
     setCurrentWorkoutId(id)
@@ -770,6 +783,21 @@ function App() {
       {
         date: workoutDate,
         topic: workoutTopic.trim(),
+        status: 'in_progress',
+      }
+    )
+
+    await loadData()
+    showSaved()
+  }
+
+  async function completeWorkout() {
+    if (!currentWorkoutId) return
+
+    await db.workouts.update(
+      currentWorkoutId,
+      {
+        status: 'done',
       }
     )
 
@@ -2321,9 +2349,10 @@ function App() {
                         <div className="space-y-4">
 
                           <button
-                            onClick={() =>
+                            onClick={() => {
+                              setPage('Gym')
                               loadWorkout(todayWorkout.id!)
-                            }
+                            }}
                             className="w-full rounded-xl border border-slate-200 p-4 text-left transition hover:bg-slate-50"
                           >
                             <div className="flex items-start justify-between gap-3">
@@ -2346,10 +2375,11 @@ function App() {
                           </button>
 
                           <button
-                            onClick={() =>
+                            onClick={() => {
+                              setPage('Gym')
                               loadWorkout(todayWorkout.id!)
-                            }
-                            className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"
+                            }}
+                            className="w-full rounded-xl border border-slate-200 p-4 text-left"
                           >
                             Open Workout
                           </button>
@@ -2961,14 +2991,33 @@ function App() {
                       </div>
                     </div>
 
-                    <button
-                      onClick={
-                        updateWorkoutInfo
-                      }
-                      className="mb-6 rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white"
-                    >
-                      Save Workout Info
-                    </button>
+                    <div className="mb-6 flex flex-wrap items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={updateWorkoutInfo}
+                        className="rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white"
+                      >
+                        Save Workout Info
+                      </button>
+
+                      {workouts.find(w => w.id === currentWorkoutId)?.status ===
+                        'in_progress' && (
+                          <button
+                            type="button"
+                            onClick={completeWorkout}
+                            className="rounded-xl bg-green-600 px-5 py-3 font-semibold text-white"
+                          >
+                            Complete Workout
+                          </button>
+                        )}
+
+                      {workouts.find(w => w.id === currentWorkoutId)?.status ===
+                        'done' && (
+                          <span className="rounded-xl bg-green-100 px-4 py-3 font-semibold text-green-700">
+                            ✓ Workout Completed
+                          </span>
+                        )}
+                    </div>
 
                     <div className="space-y-5">
                       {workoutExercises.length ===
@@ -3017,6 +3066,7 @@ function App() {
 
                                 <div className="flex flex-wrap gap-2">
                                   <button
+                                    type="button"
                                     onClick={() =>
                                       moveExercise(
                                         itemId,
@@ -3029,6 +3079,7 @@ function App() {
                                   </button>
 
                                   <button
+                                    type="button"
                                     onClick={() =>
                                       moveExercise(
                                         itemId,
@@ -3041,6 +3092,7 @@ function App() {
                                   </button>
 
                                   <button
+                                    type="button"
                                     onClick={() =>
                                       removeExerciseFromWorkout(
                                         itemId
@@ -3061,6 +3113,7 @@ function App() {
                                   </h4>
 
                                   <button
+                                    type="button"
                                     onClick={() =>
                                       addPlanSet(
                                         itemId
@@ -3219,6 +3272,7 @@ function App() {
 
                                               <td className="p-2">
                                                 <button
+                                                  type="button"
                                                   onClick={() =>
                                                     deletePlanSet(
                                                       itemId,
@@ -3248,6 +3302,7 @@ function App() {
 
                                   <div className="flex flex-wrap gap-2">
                                     <button
+                                      type="button"
                                       onClick={() =>
                                         copyPlanToActual(itemId)
                                       }
@@ -3257,6 +3312,7 @@ function App() {
                                     </button>
 
                                     <button
+                                      type="button"
                                       onClick={() =>
                                         copyPreviousSet(itemId)
                                       }
@@ -3266,6 +3322,7 @@ function App() {
                                     </button>
 
                                     <button
+                                      type="button"
                                       onClick={() =>
                                         addActualSet(itemId)
                                       }
@@ -3411,6 +3468,7 @@ function App() {
 
                                               <td className="p-2">
                                                 <button
+                                                  type="button"
                                                   onClick={() =>
                                                     deleteActualSet(
                                                       itemId,
@@ -3440,129 +3498,148 @@ function App() {
 
                 {/* EXERCISE LIBRARY */}
                 <section className="rounded-2xl bg-white p-5 shadow-sm">
-                  <div className="mb-4">
-                    <h2 className="text-lg font-bold">
-                      Exercise Library
-                    </h2>
-
-                    <p className="text-sm text-slate-500">
-                      Tạo một lần, dùng lại cho mọi workout.
-                    </p>
-                  </div>
-
-                  <div className="mb-5 flex flex-col gap-3 sm:flex-row">
-                    <input
-                      value={newExerciseName}
-                      onChange={e =>
-                        setNewExerciseName(
-                          e.target.value
-                        )
-                      }
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                          addExercise()
-                        }
-                      }}
-                      placeholder="Dumbbell Press"
-                      className="min-w-0 flex-1 rounded-xl border border-slate-300 px-4 py-3"
-                    />
-
+                  <div className="mb-4 flex items-center justify-between gap-3">
                     <button
-                      onClick={addExercise}
-                      className="rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white"
+                      type="button"
+                      onClick={() =>
+                        setExerciseLibraryOpen(prev => !prev)
+                      }
+                      className="flex min-w-0 flex-1 items-center justify-between text-left"
                     >
-                      + Add Exercise
+                      <div className="min-w-0">
+                        <h2 className="text-lg font-bold">
+                          Exercise Library
+                        </h2>
+
+                        <p className="text-sm text-slate-500">
+                          Tạo một lần, dùng lại cho mọi workout.
+                        </p>
+                      </div>
+
+                      <span className="ml-3 shrink-0 text-slate-500">
+                        {exerciseLibraryOpen ? '⌃' : '⌄'}
+                      </span>
                     </button>
                   </div>
+                  {exerciseLibraryOpen && (
+                    <div>
+                      <div className="mb-5 flex flex-col gap-3 sm:flex-row">
+                        <input
+                          value={newExerciseName}
+                          onChange={e =>
+                            setNewExerciseName(
+                              e.target.value
+                            )
+                          }
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              addExercise()
+                            }
+                          }}
+                          placeholder="Dumbbell Press"
+                          className="min-w-0 flex-1 rounded-xl border border-slate-300 px-4 py-3"
+                        />
 
-                  {currentWorkoutId && (
-                    <div className="mb-5">
-                      <input
-                        value={librarySearch}
-                        onChange={e =>
-                          setLibrarySearch(
-                            e.target.value
-                          )
-                        }
-                        placeholder="Search exercise..."
-                        className="w-full rounded-xl border border-slate-300 px-4 py-3"
-                      />
+                        <button
+                          onClick={addExercise}
+                          className="rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white"
+                        >
+                          + Add Exercise
+                        </button>
+                      </div>
+
+                      {currentWorkoutId && (
+                        <div className="mb-5">
+                          <input
+                            value={librarySearch}
+                            onChange={e =>
+                              setLibrarySearch(
+                                e.target.value
+                              )
+                            }
+                            placeholder="Search exercise..."
+                            className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                          />
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        {filteredExercises.map(
+                          exercise => {
+                            const added =
+                              currentWorkoutId
+                                ? workoutExercises.some(
+                                  item =>
+                                    item.exerciseId ===
+                                    exercise.id
+                                )
+                                : false
+
+                            return (
+                              <div
+                                key={exercise.id}
+                                className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"
+                              >
+                                <div className="min-w-0">
+                                  <div className="truncate font-medium">
+                                    {exercise.name}
+                                  </div>
+
+                                  <div className="text-xs text-slate-500">
+                                    Created{' '}
+                                    {exercise.createdAt
+                                      ? formatDate(
+                                        exercise.createdAt
+                                          .toISOString()
+                                          .slice(
+                                            0,
+                                            10
+                                          )
+                                      )
+                                      : ''}
+                                  </div>
+                                </div>
+
+                                <div className="flex shrink-0 gap-2">
+                                  {currentWorkoutId && (
+                                    <button
+                                      type="button"
+                                      disabled={added}
+                                      onClick={() =>
+                                        addExerciseToWorkout(
+                                          exercise.id!
+                                        )
+                                      }
+                                      className={`rounded-lg px-3 py-2 text-sm ${added
+                                        ? 'bg-slate-100 text-slate-400'
+                                        : 'bg-slate-900 text-white'
+                                        }`}
+                                    >
+                                      {added ? 'Added' : '+ Add'}
+                                    </button>
+                                  )}
+
+                                  {exerciseDeletionEnabled && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        deleteExercise(
+                                          exercise.id!
+                                        )
+                                      }
+                                      className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600"
+                                    >
+                                      🗑
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          }
+                        )}
+                      </div>
                     </div>
                   )}
-
-                  <div className="space-y-2">
-                    {filteredExercises.map(
-                      exercise => {
-                        const added =
-                          currentWorkoutId
-                            ? workoutExercises.some(
-                              item =>
-                                item.exerciseId ===
-                                exercise.id
-                            )
-                            : false
-
-                        return (
-                          <div
-                            key={exercise.id}
-                            className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"
-                          >
-                            <div className="min-w-0">
-                              <div className="truncate font-medium">
-                                {exercise.name}
-                              </div>
-
-                              <div className="text-xs text-slate-500">
-                                Created{' '}
-                                {exercise.createdAt
-                                  ? formatDate(
-                                    exercise.createdAt
-                                      .toISOString()
-                                      .slice(
-                                        0,
-                                        10
-                                      )
-                                  )
-                                  : ''}
-                              </div>
-                            </div>
-
-                            <div className="flex shrink-0 gap-2">
-                              {currentWorkoutId && (
-                                <button
-                                  disabled={added}
-                                  onClick={() =>
-                                    addExerciseToWorkout(
-                                      exercise.id!
-                                    )
-                                  }
-                                  className={`rounded-lg px-3 py-2 text-sm ${added
-                                    ? 'bg-slate-100 text-slate-400'
-                                    : 'bg-slate-900 text-white'
-                                    }`}
-                                >
-                                  {added
-                                    ? 'Added'
-                                    : '+ Add'}
-                                </button>
-                              )}
-
-                              <button
-                                onClick={() =>
-                                  deleteExercise(
-                                    exercise.id!
-                                  )
-                                }
-                                className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600"
-                              >
-                                🗑
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      }
-                    )}
-                  </div>
                 </section>
 
                 {/* RECENT WORKOUTS */}
@@ -3596,8 +3673,19 @@ function App() {
                                 {workout.topic}
                               </div>
 
-                              <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
-                                Draft
+                              <span
+                                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${workout.status === 'draft'
+                                  ? 'bg-slate-100 text-slate-600'
+                                  : workout.status === 'in_progress'
+                                    ? 'bg-blue-100 text-blue-700'
+                                    : 'bg-green-100 text-green-700'
+                                  }`}
+                              >
+                                {workout.status === 'draft'
+                                  ? 'Draft'
+                                  : workout.status === 'in_progress'
+                                    ? 'In Progress'
+                                    : 'Done'}
                               </span>
                             </div>
 
@@ -3610,12 +3698,16 @@ function App() {
 
                           <div className="flex gap-2">
                             <button
-                              onClick={() =>
-                                loadWorkout(
-                                  workout.id!
-                                )
-                              }
-                              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+                              type="button"
+                              onClick={() => {
+                                setPage('Gym')
+                                loadWorkout(workout.id!)
+                                window.scrollTo({
+                                  top: 0,
+                                  behavior: 'smooth',
+                                })
+                              }}
+                              className="..."
                             >
                               Open
                             </button>
@@ -3882,7 +3974,7 @@ function App() {
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Habits */}
                     <div>
 
@@ -4752,7 +4844,61 @@ function App() {
                   </div>
 
                 </section>
+                {/* EXERCISE LIBRARY SETTINGS */}
+                <section className="rounded-2xl bg-white p-6 shadow-sm">
+                  <h3 className="font-bold">
+                    Exercise Library
+                  </h3>
 
+                  <p className="mt-1 text-sm text-slate-500">
+                    Quản lý quyền xóa Exercise khỏi thư viện.
+                  </p>
+
+                  <div className="mt-5 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="font-semibold">
+                        Enable Exercise Deletion
+                      </p>
+
+                      <p className="mt-1 text-sm text-slate-500">
+                        Bật tùy chọn này để hiển thị nút xóa Exercise trong Gym.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextValue = !exerciseDeletionEnabled
+
+                        setExerciseDeletionEnabled(nextValue)
+
+                        localStorage.setItem(
+                          'exerciseDeletionEnabled',
+                          String(nextValue)
+                        )
+                      }}
+                      className={`relative h-7 w-12 shrink-0 rounded-full transition ${exerciseDeletionEnabled
+                        ? 'bg-green-600'
+                        : 'bg-slate-300'
+                        }`}
+                      aria-label="Enable Exercise Deletion"
+                    >
+                      <span
+                        className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition ${exerciseDeletionEnabled
+                          ? 'left-6'
+                          : 'left-1'
+                          }`}
+                      />
+                    </button>
+                  </div>
+
+                  {exerciseDeletionEnabled && (
+                    <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-700">
+                      <strong>Cảnh báo:</strong> Khi bật, nút xóa Exercise sẽ
+                      xuất hiện trong Exercise Library.
+                    </div>
+                  )}
+                </section>
                 {/* APP INFO */}
                 <section className="rounded-2xl bg-white p-6 shadow-sm">
 
