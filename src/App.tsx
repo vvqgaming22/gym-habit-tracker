@@ -5009,20 +5009,21 @@ function App() {
       </div>
 
       {/* MOBILE NAV */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white md:hidden">
-        <div className="grid grid-cols-6">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
+        <div className="grid grid-cols-7">
           {navItems.map(item => (
             <button
+              type="button"
               key={item}
-              onClick={() =>
-                setPage(item)
-              }
-              className={`px-1 py-3 text-[10px] font-medium ${page === item
-                ? 'text-slate-900'
-                : 'text-slate-400'
+              onClick={() => setPage(item)}
+              className={`min-w-0 px-0.5 py-3 text-xs font-medium leading-tight ${page === item
+                  ? 'text-slate-900'
+                  : 'text-slate-400'
                 }`}
             >
-              {item}
+              <span className="block truncate">
+                {item}
+              </span>
             </button>
           ))}
         </div>
