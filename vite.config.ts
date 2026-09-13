@@ -20,8 +20,9 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
-        scope: '/',
+        
+        start_url: '/gym-habit-tracker/',
+        scope: '/gym-habit-tracker/',
         icons: [
           {
             src: '/pwa-192.png',
