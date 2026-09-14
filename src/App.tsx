@@ -47,6 +47,24 @@ const formatDate = (date: string) => {
 
 function App() {
   const [page, setPage] = useState<Page>('Dashboard')
+
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem('darkMode') === 'true'
+  )
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode)
+    localStorage.setItem('darkMode', String(darkMode))
+  }, [darkMode])
+
+  useEffect(() => {
+    if (page === 'Gym') {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      })
+    }
+  }, [page])
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [habits, setHabits] = useState<Habit[]>([])
@@ -55,6 +73,7 @@ function App() {
   const [exerciseDeletionEnabled, setExerciseDeletionEnabled] = useState(
     localStorage.getItem('exerciseDeletionEnabled') === 'true'
   )
+  const [expandedExercises, setExpandedExercises] = useState<number[]>([])
 
   const [currentWorkoutId, setCurrentWorkoutId] =
     useState<number | null>(null)
@@ -2430,9 +2449,10 @@ function App() {
                         .map(workout => (
                           <button
                             key={workout.id}
-                            onClick={() =>
+                            onClick={() => {
+                              setPage('Gym')
                               loadWorkout(workout.id!)
-                            }
+                            }}
                             className="flex w-full items-center justify-between gap-4 rounded-xl border border-slate-200 p-3 text-left hover:bg-slate-50"
                           >
 
@@ -3049,20 +3069,38 @@ function App() {
                             >
 
                               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                                <div>
-                                  <div className="text-lg font-bold">
-                                    {index + 1}.{' '}
-                                    {
-                                      workoutExerciseNames[
-                                      itemId
-                                      ]
-                                    }
-                                  </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setExpandedExercises(prev =>
+                                      prev.includes(itemId)
+                                        ? prev.filter(id => id !== itemId)
+                                        : [...prev, itemId]
+                                    )
+                                  }}
+                                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                                >
+                                  <span className="shrink-0 text-slate-500">
+                                    {expandedExercises.includes(itemId)
+                                      ? '⌃'
+                                      : '⌄'}
+                                  </span>
 
-                                  <div className="text-xs text-slate-500">
-                                    Exercise #{item.exerciseId}
+                                  <div className="min-w-0">
+                                    <div className="text-lg font-bold">
+                                      {index + 1}.{' '}
+                                      {
+                                        workoutExerciseNames[
+                                        itemId
+                                        ]
+                                      }
+                                    </div>
+
+                                    <div className="text-xs text-slate-500">
+                                      Exercise #{item.exerciseId}
+                                    </div>
                                   </div>
-                                </div>
+                                </button>
 
                                 <div className="flex flex-wrap gap-2">
                                   <button
@@ -3105,389 +3143,393 @@ function App() {
                                 </div>
                               </div>
 
-                              {/* PLAN */}
-                              <div className="mb-6 rounded-xl bg-slate-50 p-4">
-                                <div className="mb-3 flex items-center justify-between">
-                                  <h4 className="font-bold">
-                                    Plan
-                                  </h4>
+                              {expandedExercises.includes(itemId) && (
+                                <>
+                                  {/* PLAN */}
+                                  <div className="mb-6 rounded-xl bg-slate-50 p-4">
+                                    <div className="mb-3 flex items-center justify-between">
+                                      <h4 className="font-bold">
+                                        Plan
+                                      </h4>
 
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      addPlanSet(
-                                        itemId
-                                      )
-                                    }
-                                    className="rounded-lg bg-white px-3 py-2 text-sm font-medium shadow-sm"
-                                  >
-                                    + Add Plan Set
-                                  </button>
-                                </div>
-
-                                {plan.length ===
-                                  0 ? (
-                                  <p className="text-sm text-slate-500">
-                                    Chưa có plan.
-                                  </p>
-                                ) : (
-                                  <div className="overflow-x-auto">
-                                    <table className="w-full min-w-[650px] text-sm">
-                                      <thead>
-                                        <tr className="border-b text-left text-slate-500">
-                                          <th className="p-2">
-                                            Set
-                                          </th>
-                                          <th className="p-2">
-                                            KG
-                                          </th>
-                                          <th className="p-2">
-                                            Reps
-                                          </th>
-                                          <th className="p-2">
-                                            RPE
-                                          </th>
-                                          <th className="p-2">
-                                            Note
-                                          </th>
-                                          <th />
-                                        </tr>
-                                      </thead>
-
-                                      <tbody>
-                                        {plan.map(
-                                          set => (
-                                            <tr
-                                              key={
-                                                set.id
-                                              }
-                                              className="border-b last:border-0"
-                                            >
-                                              <td className="p-2">
-                                                {
-                                                  set.setNumber
-                                                }
-                                              </td>
-
-                                              <td className="p-2">
-                                                <input
-                                                  type="number"
-                                                  value={
-                                                    set.kg ??
-                                                    ''
-                                                  }
-                                                  onChange={e =>
-                                                    updatePlanSet(
-                                                      set,
-                                                      'kg',
-                                                      e
-                                                        .target
-                                                        .value ===
-                                                        ''
-                                                        ? undefined
-                                                        : Number(
-                                                          e
-                                                            .target
-                                                            .value
-                                                        )
-                                                    )
-                                                  }
-                                                  className="w-20 rounded-lg border px-2 py-2"
-                                                />
-                                              </td>
-
-                                              <td className="p-2">
-                                                <input
-                                                  type="number"
-                                                  value={
-                                                    set.reps ??
-                                                    ''
-                                                  }
-                                                  onChange={e =>
-                                                    updatePlanSet(
-                                                      set,
-                                                      'reps',
-                                                      e
-                                                        .target
-                                                        .value ===
-                                                        ''
-                                                        ? undefined
-                                                        : Number(
-                                                          e
-                                                            .target
-                                                            .value
-                                                        )
-                                                    )
-                                                  }
-                                                  className="w-20 rounded-lg border px-2 py-2"
-                                                />
-                                              </td>
-
-                                              <td className="p-2">
-                                                <input
-                                                  type="number"
-                                                  step="0.5"
-                                                  value={
-                                                    set.rpe ??
-                                                    ''
-                                                  }
-                                                  onChange={e =>
-                                                    updatePlanSet(
-                                                      set,
-                                                      'rpe',
-                                                      e
-                                                        .target
-                                                        .value ===
-                                                        ''
-                                                        ? undefined
-                                                        : Number(
-                                                          e
-                                                            .target
-                                                            .value
-                                                        )
-                                                    )
-                                                  }
-                                                  className="w-20 rounded-lg border px-2 py-2"
-                                                />
-                                              </td>
-
-                                              <td className="p-2">
-                                                <input
-                                                  value={
-                                                    set.note ??
-                                                    ''
-                                                  }
-                                                  onChange={e =>
-                                                    updatePlanSet(
-                                                      set,
-                                                      'note',
-                                                      e
-                                                        .target
-                                                        .value
-                                                    )
-                                                  }
-                                                  className="w-full min-w-[160px] rounded-lg border px-2 py-2"
-                                                />
-                                              </td>
-
-                                              <td className="p-2">
-                                                <button
-                                                  type="button"
-                                                  onClick={() =>
-                                                    deletePlanSet(
-                                                      itemId,
-                                                      set.id!
-                                                    )
-                                                  }
-                                                  className="text-red-600"
-                                                >
-                                                  Delete
-                                                </button>
-                                              </td>
-                                            </tr>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          addPlanSet(
+                                            itemId
                                           )
-                                        )}
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                )}
-                              </div>
+                                        }
+                                        className="rounded-lg bg-white px-3 py-2 text-sm font-medium shadow-sm"
+                                      >
+                                        + Add Plan Set
+                                      </button>
+                                    </div>
 
-                              {/* ACTUAL */}
-                              <div>
-                                <div className="mb-3 flex items-center justify-between">
-                                  <h4 className="font-bold">
-                                    Actual Training
-                                  </h4>
+                                    {plan.length ===
+                                      0 ? (
+                                      <p className="text-sm text-slate-500">
+                                        Chưa có plan.
+                                      </p>
+                                    ) : (
+                                      <div className="overflow-x-auto">
+                                        <table className="w-full min-w-[650px] text-sm">
+                                          <thead>
+                                            <tr className="border-b text-left text-slate-500">
+                                              <th className="p-2">
+                                                Set
+                                              </th>
+                                              <th className="p-2">
+                                                KG
+                                              </th>
+                                              <th className="p-2">
+                                                Reps
+                                              </th>
+                                              <th className="p-2">
+                                                RPE
+                                              </th>
+                                              <th className="p-2">
+                                                Note
+                                              </th>
+                                              <th />
+                                            </tr>
+                                          </thead>
 
-                                  <div className="flex flex-wrap gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        copyPlanToActual(itemId)
-                                      }
-                                      className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700"
-                                    >
-                                      Copy Plan → Actual
-                                    </button>
-
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        copyPreviousSet(itemId)
-                                      }
-                                      className="rounded-lg border px-3 py-2 text-sm"
-                                    >
-                                      Copy Previous
-                                    </button>
-
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        addActualSet(itemId)
-                                      }
-                                      className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white"
-                                    >
-                                      + Add Set
-                                    </button>
-                                  </div>
-                                </div>
-
-                                {actual.length ===
-                                  0 ? (
-                                  <p className="text-sm text-slate-500">
-                                    Chưa nhập actual.
-                                  </p>
-                                ) : (
-                                  <div className="overflow-x-auto">
-                                    <table className="w-full min-w-[800px] text-sm">
-                                      <thead>
-                                        <tr className="border-b text-left text-slate-500">
-                                          <th className="p-2">
-                                            Set
-                                          </th>
-                                          <th className="p-2">
-                                            KG
-                                          </th>
-                                          <th className="p-2">
-                                            Reps
-                                          </th>
-                                          <th className="p-2">
-                                            RPE
-                                          </th>
-                                          <th className="p-2">
-                                            Note
-                                          </th>
-                                          <th />
-                                        </tr>
-                                      </thead>
-
-                                      <tbody>
-                                        {actual.map(
-                                          set => (
-                                            <tr
-                                              key={
-                                                set.id
-                                              }
-                                              className="border-b last:border-0"
-                                            >
-                                              <td className="p-2 font-medium">
-                                                {
-                                                  set.setNumber
-                                                }
-                                              </td>
-
-                                              <td className="p-2">
-                                                <input
-                                                  type="number"
-                                                  value={
-                                                    set.kg
+                                          <tbody>
+                                            {plan.map(
+                                              set => (
+                                                <tr
+                                                  key={
+                                                    set.id
                                                   }
-                                                  onChange={e =>
-                                                    updateActualSet(
-                                                      set,
-                                                      'kg',
-                                                      Number(
-                                                        e
-                                                          .target
-                                                          .value
-                                                      )
-                                                    )
-                                                  }
-                                                  className="w-20 rounded-lg border px-2 py-2"
-                                                />
-                                              </td>
+                                                  className="border-b last:border-0"
+                                                >
+                                                  <td className="p-2">
+                                                    {
+                                                      set.setNumber
+                                                    }
+                                                  </td>
 
-                                              <td className="p-2">
-                                                <input
-                                                  type="number"
-                                                  value={
-                                                    set.reps
-                                                  }
-                                                  onChange={e =>
-                                                    updateActualSet(
-                                                      set,
-                                                      'reps',
-                                                      Number(
-                                                        e
-                                                          .target
-                                                          .value
-                                                      )
-                                                    )
-                                                  }
-                                                  className="w-20 rounded-lg border px-2 py-2"
-                                                />
-                                              </td>
-
-                                              <td className="p-2">
-                                                <input
-                                                  type="number"
-                                                  step="0.5"
-                                                  value={
-                                                    set.rpe ??
-                                                    ''
-                                                  }
-                                                  onChange={e =>
-                                                    updateActualSet(
-                                                      set,
-                                                      'rpe',
-                                                      e
-                                                        .target
-                                                        .value ===
+                                                  <td className="p-2">
+                                                    <input
+                                                      type="number"
+                                                      value={
+                                                        set.kg ??
                                                         ''
-                                                        ? undefined
-                                                        : Number(
+                                                      }
+                                                      onChange={e =>
+                                                        updatePlanSet(
+                                                          set,
+                                                          'kg',
+                                                          e
+                                                            .target
+                                                            .value ===
+                                                            ''
+                                                            ? undefined
+                                                            : Number(
+                                                              e
+                                                                .target
+                                                                .value
+                                                            )
+                                                        )
+                                                      }
+                                                      className="w-20 rounded-lg border px-2 py-2"
+                                                    />
+                                                  </td>
+
+                                                  <td className="p-2">
+                                                    <input
+                                                      type="number"
+                                                      value={
+                                                        set.reps ??
+                                                        ''
+                                                      }
+                                                      onChange={e =>
+                                                        updatePlanSet(
+                                                          set,
+                                                          'reps',
+                                                          e
+                                                            .target
+                                                            .value ===
+                                                            ''
+                                                            ? undefined
+                                                            : Number(
+                                                              e
+                                                                .target
+                                                                .value
+                                                            )
+                                                        )
+                                                      }
+                                                      className="w-20 rounded-lg border px-2 py-2"
+                                                    />
+                                                  </td>
+
+                                                  <td className="p-2">
+                                                    <input
+                                                      type="number"
+                                                      step="0.5"
+                                                      value={
+                                                        set.rpe ??
+                                                        ''
+                                                      }
+                                                      onChange={e =>
+                                                        updatePlanSet(
+                                                          set,
+                                                          'rpe',
+                                                          e
+                                                            .target
+                                                            .value ===
+                                                            ''
+                                                            ? undefined
+                                                            : Number(
+                                                              e
+                                                                .target
+                                                                .value
+                                                            )
+                                                        )
+                                                      }
+                                                      className="w-20 rounded-lg border px-2 py-2"
+                                                    />
+                                                  </td>
+
+                                                  <td className="p-2">
+                                                    <input
+                                                      value={
+                                                        set.note ??
+                                                        ''
+                                                      }
+                                                      onChange={e =>
+                                                        updatePlanSet(
+                                                          set,
+                                                          'note',
                                                           e
                                                             .target
                                                             .value
                                                         )
-                                                    )
-                                                  }
-                                                  className="w-20 rounded-lg border px-2 py-2"
-                                                />
-                                              </td>
+                                                      }
+                                                      className="w-full min-w-[160px] rounded-lg border px-2 py-2"
+                                                    />
+                                                  </td>
 
-                                              <td className="p-2">
-                                                <input
-                                                  value={
-                                                    set.note ??
-                                                    ''
-                                                  }
-                                                  onChange={e =>
-                                                    updateActualSet(
-                                                      set,
-                                                      'note',
-                                                      e
-                                                        .target
-                                                        .value
-                                                    )
-                                                  }
-                                                  className="w-full min-w-[200px] rounded-lg border px-2 py-2"
-                                                />
-                                              </td>
-
-                                              <td className="p-2">
-                                                <button
-                                                  type="button"
-                                                  onClick={() =>
-                                                    deleteActualSet(
-                                                      itemId,
-                                                      set.id!
-                                                    )
-                                                  }
-                                                  className="text-red-600"
-                                                >
-                                                  Delete
-                                                </button>
-                                              </td>
-                                            </tr>
-                                          )
-                                        )}
-                                      </tbody>
-                                    </table>
+                                                  <td className="p-2">
+                                                    <button
+                                                      type="button"
+                                                      onClick={() =>
+                                                        deletePlanSet(
+                                                          itemId,
+                                                          set.id!
+                                                        )
+                                                      }
+                                                      className="text-red-600"
+                                                    >
+                                                      Delete
+                                                    </button>
+                                                  </td>
+                                                </tr>
+                                              )
+                                            )}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    )}
                                   </div>
-                                )}
-                              </div>
+
+                                  {/* ACTUAL */}
+                                  <div>
+                                    <div className="mb-3 flex items-center justify-between">
+                                      <h4 className="font-bold">
+                                        Actual Training
+                                      </h4>
+
+                                      <div className="flex flex-wrap gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            copyPlanToActual(itemId)
+                                          }
+                                          className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700"
+                                        >
+                                          Copy Plan → Actual
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            copyPreviousSet(itemId)
+                                          }
+                                          className="rounded-lg border px-3 py-2 text-sm"
+                                        >
+                                          Copy Previous
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            addActualSet(itemId)
+                                          }
+                                          className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white"
+                                        >
+                                          + Add Set
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    {actual.length ===
+                                      0 ? (
+                                      <p className="text-sm text-slate-500">
+                                        Chưa nhập actual.
+                                      </p>
+                                    ) : (
+                                      <div className="overflow-x-auto">
+                                        <table className="w-full min-w-[800px] text-sm">
+                                          <thead>
+                                            <tr className="border-b text-left text-slate-500">
+                                              <th className="p-2">
+                                                Set
+                                              </th>
+                                              <th className="p-2">
+                                                KG
+                                              </th>
+                                              <th className="p-2">
+                                                Reps
+                                              </th>
+                                              <th className="p-2">
+                                                RPE
+                                              </th>
+                                              <th className="p-2">
+                                                Note
+                                              </th>
+                                              <th />
+                                            </tr>
+                                          </thead>
+
+                                          <tbody>
+                                            {actual.map(
+                                              set => (
+                                                <tr
+                                                  key={
+                                                    set.id
+                                                  }
+                                                  className="border-b last:border-0"
+                                                >
+                                                  <td className="p-2 font-medium">
+                                                    {
+                                                      set.setNumber
+                                                    }
+                                                  </td>
+
+                                                  <td className="p-2">
+                                                    <input
+                                                      type="number"
+                                                      value={
+                                                        set.kg
+                                                      }
+                                                      onChange={e =>
+                                                        updateActualSet(
+                                                          set,
+                                                          'kg',
+                                                          Number(
+                                                            e
+                                                              .target
+                                                              .value
+                                                          )
+                                                        )
+                                                      }
+                                                      className="w-20 rounded-lg border px-2 py-2"
+                                                    />
+                                                  </td>
+
+                                                  <td className="p-2">
+                                                    <input
+                                                      type="number"
+                                                      value={
+                                                        set.reps
+                                                      }
+                                                      onChange={e =>
+                                                        updateActualSet(
+                                                          set,
+                                                          'reps',
+                                                          Number(
+                                                            e
+                                                              .target
+                                                              .value
+                                                          )
+                                                        )
+                                                      }
+                                                      className="w-20 rounded-lg border px-2 py-2"
+                                                    />
+                                                  </td>
+
+                                                  <td className="p-2">
+                                                    <input
+                                                      type="number"
+                                                      step="0.5"
+                                                      value={
+                                                        set.rpe ??
+                                                        ''
+                                                      }
+                                                      onChange={e =>
+                                                        updateActualSet(
+                                                          set,
+                                                          'rpe',
+                                                          e
+                                                            .target
+                                                            .value ===
+                                                            ''
+                                                            ? undefined
+                                                            : Number(
+                                                              e
+                                                                .target
+                                                                .value
+                                                            )
+                                                        )
+                                                      }
+                                                      className="w-20 rounded-lg border px-2 py-2"
+                                                    />
+                                                  </td>
+
+                                                  <td className="p-2">
+                                                    <input
+                                                      value={
+                                                        set.note ??
+                                                        ''
+                                                      }
+                                                      onChange={e =>
+                                                        updateActualSet(
+                                                          set,
+                                                          'note',
+                                                          e
+                                                            .target
+                                                            .value
+                                                        )
+                                                      }
+                                                      className="w-full min-w-[200px] rounded-lg border px-2 py-2"
+                                                    />
+                                                  </td>
+
+                                                  <td className="p-2">
+                                                    <button
+                                                      type="button"
+                                                      onClick={() =>
+                                                        deleteActualSet(
+                                                          itemId,
+                                                          set.id!
+                                                        )
+                                                      }
+                                                      className="text-red-600"
+                                                    >
+                                                      Delete
+                                                    </button>
+                                                  </td>
+                                                </tr>
+                                              )
+                                            )}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    )}
+                                  </div>
+                                </>
+                              )}
                             </div>
                           )
                         }
@@ -3702,10 +3744,6 @@ function App() {
                               onClick={() => {
                                 setPage('Gym')
                                 loadWorkout(workout.id!)
-                                window.scrollTo({
-                                  top: 0,
-                                  behavior: 'smooth',
-                                })
                               }}
                               className="..."
                             >
@@ -4899,6 +4937,32 @@ function App() {
                     </div>
                   )}
                 </section>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="font-semibold text-slate-900 dark:text-slate-100">
+                        Dark Mode
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        Sử dụng giao diện tối
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setDarkMode(prev => !prev)}
+                      className={`relative h-7 w-12 shrink-0 rounded-full transition ${darkMode ? 'bg-blue-600' : 'bg-slate-300'
+                        }`}
+                      aria-label="Toggle dark mode"
+                    >
+                      <span
+                        className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition ${darkMode ? 'left-6' : 'left-1'
+                          }`}
+                      />
+                    </button>
+                  </div>
+                </div>
                 {/* APP INFO */}
                 <section className="rounded-2xl bg-white p-6 shadow-sm">
 
