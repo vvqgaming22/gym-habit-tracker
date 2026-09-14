@@ -14,6 +14,7 @@ type HabitEntry = Habit & {
 }
 
 type DashboardPageProps = {
+  dataLoaded: boolean
   todayHabits: HabitEntry[]
   bestCurrentStreak: number
   weeklyHabitSummary: Array<{
@@ -31,6 +32,7 @@ type DashboardPageProps = {
 }
 
 export function DashboardPage({
+  dataLoaded,
   todayHabits,
   bestCurrentStreak,
   weeklyHabitSummary,
@@ -50,6 +52,20 @@ export function DashboardPage({
 
   return (
     <div className="vvq-stagger space-y-5">
+      {!dataLoaded && (
+        <section className="animate-pulse rounded-[28px] border border-slate-200 bg-white/80 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
+          <div className="h-3 w-28 rounded-full bg-slate-200 dark:bg-slate-700" />
+          <div className="mt-4 h-9 w-44 rounded-xl bg-slate-200 dark:bg-slate-700" />
+          <div className="mt-3 h-4 w-64 max-w-full rounded-full bg-slate-200 dark:bg-slate-700" />
+          <div className="mt-6 grid grid-cols-3 gap-3">
+            <div className="h-20 rounded-2xl bg-slate-200 dark:bg-slate-800" />
+            <div className="h-20 rounded-2xl bg-slate-200 dark:bg-slate-800" />
+            <div className="h-20 rounded-2xl bg-slate-200 dark:bg-slate-800" />
+          </div>
+        </section>
+      )}
+
+      {dataLoaded && (
       <section className="overflow-hidden rounded-[28px] border border-slate-700/80 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-5 text-slate-50 shadow-[0_20px_45px_rgba(2,6,23,0.38)] md:p-6">
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
@@ -116,6 +132,7 @@ export function DashboardPage({
           </button>
         </div>
       </section>
+      )}
 
       <section className="rounded-[26px] border border-cyan-500/20 bg-cyan-500/10 p-4 shadow-sm dark:border-cyan-400/20 dark:bg-cyan-400/10 sm:p-5">
         <div className="mb-3 flex items-center justify-between gap-3">

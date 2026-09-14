@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   db,
   type Exercise,
@@ -12,7 +12,7 @@ import {
 import { DashboardPage } from './components/DashboardPage'
 import { GymPage, type WorkoutTemplate } from './components/GymPage'
 import { SidebarNav } from './components/SidebarNav'
-import { MobileRadialNav } from './components/MobileRadialNav'
+import { MobileRadialNav } from './components/MobilePageNav'
 import { BrandLogo } from './components/BrandLogo'
 
 type Page =
@@ -202,6 +202,8 @@ function App() {
     useState('')
   const [undoAction, setUndoAction] =
     useState<(() => Promise<void>) | null>(null)
+  const savedTimeoutRef = useRef<number | null>(null)
+  const undoTimeoutRef = useRef<number | null>(null)
 
   const completionMap = useMemo(() => {
     const map = new Map<string, Set<number>>()
@@ -245,6 +247,7 @@ function App() {
     setWorkouts(workoutData)
     setHabits(habitData)
     setCompletions(completionData)
+    setDataLoaded(true)
   }
 
   useEffect(() => {
@@ -271,20 +274,41 @@ function App() {
   }, [])
 
   function showSaved(message = 'Saved ✓') {
-    setSavedMessage(message)
+    if (savedTimeoutRef.current !== null) {
+      window.clearTimeout(savedTimeoutRef.current)
+    }
 
-    window.setTimeout(() => {
+    if (undoTimeoutRef.current !== null) {
+      window.clearTimeout(undoTimeoutRef.current)
+      undoTimeoutRef.current = null
+    }
+
+    setSavedMessage(message)
+    setUndoAction(null)
+
+    savedTimeoutRef.current = window.setTimeout(() => {
       setSavedMessage('')
+      savedTimeoutRef.current = null
     }, 1200)
   }
 
   function showUndo(message: string, restore: () => Promise<void>) {
+    if (savedTimeoutRef.current !== null) {
+      window.clearTimeout(savedTimeoutRef.current)
+      savedTimeoutRef.current = null
+    }
+
+    if (undoTimeoutRef.current !== null) {
+      window.clearTimeout(undoTimeoutRef.current)
+    }
+
     setSavedMessage(message)
     setUndoAction(() => restore)
 
-    window.setTimeout(() => {
+    undoTimeoutRef.current = window.setTimeout(() => {
       setSavedMessage('')
       setUndoAction(null)
+      undoTimeoutRef.current = null
     }, 5000)
   }
 
@@ -1750,7 +1774,7 @@ function App() {
         exerciseStats,
         prStats,
         progression: selectedAnalyticsExercise
-          ? progressionData.get(selectedAnalyticsExercise) ?? []
+          ? (progressionData.get(selectedAnalyticsExercise) ?? []).sort((a, b) => a.date.localeCompare(b.date))
           : [],
       }
 
@@ -1900,13 +1924,15 @@ function App() {
 
   const selectedCalendarHabits =
     selectedCalendarDate
-      ? habits.map(habit => ({
-        ...habit,
-        completed: isHabitCompleted(
-          habit.id!,
-          selectedCalendarDate
-        ),
-      }))
+      ? habits
+        .filter(habit => habit.schedule.includes(getDayOfWeek(selectedCalendarDate)))
+        .map(habit => ({
+          ...habit,
+          completed: isHabitCompleted(
+            habit.id!,
+            selectedCalendarDate
+          ),
+        }))
       : []
 
   function changeCalendarMonth(
@@ -2278,6 +2304,7 @@ function App() {
 
             {page === 'Dashboard' && (
               <DashboardPage
+                dataLoaded={dataLoaded}
                 todayHabits={todayHabits}
                 bestCurrentStreak={bestCurrentStreak}
                 weeklyHabitSummary={weeklyHabitSummary}
@@ -2917,6 +2944,7 @@ function App() {
                           db.habitCompletions,
                         ],
                         async () => {
+                          await db.exercises.clear()
                           await db.workouts.clear()
                           await db.workoutExercises.clear()
                           await db.workoutSets.clear()
