@@ -12,6 +12,7 @@ import {
 import { DashboardPage } from './components/DashboardPage'
 import { GymPage, type WorkoutTemplate } from './components/GymPage'
 import { SidebarNav } from './components/SidebarNav'
+import { MobileRadialNav } from './components/MobileRadialNav'
 
 type Page =
   | 'Dashboard'
@@ -2231,16 +2232,6 @@ function App() {
 
     URL.revokeObjectURL(url)
   }
-  const navItems: Page[] = [
-    'Dashboard',
-    'Habits',
-    'Gym',
-    'Calendar',
-    'Analytics',
-    'Reports',
-    'Settings',
-  ]
-
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
       <div className="flex min-h-screen flex-col lg:flex-row">
@@ -2248,7 +2239,7 @@ function App() {
         <SidebarNav page={page} onSelect={setPage} />
 
         {/* MAIN */}
-        <main className="min-w-0 flex-1 bg-slate-100 pb-24 transition-colors lg:pb-6 dark:bg-slate-950">
+        <main className="min-w-0 flex-1 bg-slate-100 pb-8 transition-colors lg:pb-6 dark:bg-slate-950">
           <div className="mx-auto max-w-7xl p-3 sm:p-4 md:p-6 lg:p-8">
 
             {/* HEADER */}
@@ -2956,26 +2947,7 @@ function App() {
         </main>
       </div>
 
-      {/* MOBILE NAV */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-700 dark:bg-slate-950/95 lg:hidden">
-        <div className="grid grid-cols-7 px-1 pt-1">
-          {navItems.map(item => (
-            <button
-              type="button"
-              key={item}
-              onClick={() => setPage(item)}
-              className={`min-h-12 min-w-0 rounded-xl px-0.5 py-2 text-[10px] font-bold leading-tight transition ${page === item
-                ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
-                : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
-                }`}
-            >
-              <span className="block truncate">
-                {item}
-              </span>
-            </button>
-          ))}
-        </div>
-      </nav>
+      <MobileRadialNav page={page} onSelect={setPage} />
     </div>
   )
 }
