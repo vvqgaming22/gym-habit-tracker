@@ -1,2 +1,162 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --app-bg: #020817;
+  --app-bg-2: #0b1220;
+  --surface-1: #0f172a;
+  --surface-2: #111827;
+  --surface-3: #182235;
+  --surface-4: #1e293b;
+  --border: rgba(148, 163, 184, 0.22);
+  --text: #e2e8f0;
+  --text-strong: #f8fafc;
+  --muted: #cbd5e1;
+  --muted-soft: #94a3b8;
+  --brand: #38bdf8;
+  --brand-2: #818cf8;
+}
+
+html {
+  color-scheme: light;
+  background: #f1f5f9;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #ffffff 0%, #f8fafc 46%, #e2e8f0 100%);
+  color: #0f172a;
+  font-family: Inter, 'Segoe UI', sans-serif;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background: radial-gradient(circle at top, #101b2d 0%, #07111f 45%, #020817 100%);
+  color: var(--text);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 1023px) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+html.dark .bg-white,
+html.dark .bg-slate-50,
+html.dark .bg-slate-100,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100,
+html.dark .bg-slate-200 {
+  background-color: var(--surface-1) !important;
+}
+
+html.dark .bg-slate-900,
+html.dark .bg-black {
+  background-color: rgba(2, 8, 23, 0.96) !important;
+}
+
+html.dark .border,
+html.dark .border-t,
+html.dark .border-r,
+html.dark .border-b,
+html.dark .border-l,
+html.dark .border-slate-200,
+html.dark .border-slate-300,
+html.dark .border-gray-200,
+html.dark .border-gray-100,
+html.dark .border-gray-300,
+html.dark .border-slate-700,
+html.dark .border-slate-800,
+html.dark .border-slate-600 {
+  border-color: var(--border) !important;
+}
+
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700,
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-gray-700,
+html.dark .text-slate-100,
+html.dark .text-slate-200,
+html.dark .text-slate-50 {
+  color: var(--text-strong) !important;
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-500,
+html.dark .text-slate-400,
+html.dark .text-gray-600,
+html.dark .text-gray-500,
+html.dark .text-gray-400 {
+  color: var(--muted) !important;
+}
+
+html.dark .text-slate-300,
+html.dark .text-slate-400,
+html.dark .text-slate-500 {
+  color: var(--muted-soft) !important;
+}
+
+html.dark .shadow-sm,
+html.dark .shadow {
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35) !important;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: rgba(15, 23, 42, 0.96);
+  border-color: var(--border);
+  color: var(--text-strong);
+}
+
+html.dark button:not([class*="bg-slate-900"]):not([class*="bg-black"]) {
+  color: var(--text);
+}
+
+html.dark .rounded-xl,
+html.dark .rounded-2xl,
+html.dark .rounded-lg {
+  border-color: var(--border);
+}
+
+html.dark .text-green-700,
+html.dark .text-amber-700,
+html.dark .text-red-700 {
+  opacity: 0.95;
+}
+
+html.dark .bg-gradient-to-br {
+  filter: saturate(1.15);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.2);
+}
