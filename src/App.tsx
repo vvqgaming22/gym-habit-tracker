@@ -2241,7 +2241,7 @@ function App() {
 
         {/* MAIN */}
         <main className="min-w-0 flex-1 bg-slate-100 pb-8 transition-colors lg:pb-6 dark:bg-slate-950">
-          <div className="mx-auto max-w-7xl p-3 sm:p-4 md:p-6 lg:p-8">
+          <div key={page} className="vvq-page-enter mx-auto max-w-7xl p-3 sm:p-4 md:p-6 lg:p-8">
 
             {/* HEADER */}
             <div className="mb-4 flex items-center justify-between gap-3 sm:mb-6 sm:gap-4">
@@ -2261,7 +2261,7 @@ function App() {
               </div>
 
               {savedMessage && (
-                <div className="flex items-center gap-2 rounded-xl bg-green-100 px-3 py-2 text-sm font-medium text-green-700 dark:bg-green-900/30 dark:text-green-200">
+                <div className="vvq-toast flex items-center gap-2 rounded-xl bg-green-100 px-3 py-2 text-sm font-medium text-green-700 dark:bg-green-900/30 dark:text-green-200">
                   <span>{savedMessage}</span>
                   {undoAction && (
                     <button

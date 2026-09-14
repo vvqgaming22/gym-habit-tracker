@@ -25,13 +25,6 @@ const navItems: Array<{ page: MobilePage; shortLabel: string; icon: string }> = 
   { page: 'Settings', shortLabel: 'Settings', icon: '⚙' },
 ]
 
-const radius = 88
-const angleStep = 360 / navItems.length
-
-function angleDifference(first: number, second: number) {
-  return Math.abs(((first - second + 540) % 360) - 180)
-}
-
 export function MobileRadialNav({ page, onSelect }: MobileRadialNavProps) {
   const [open, setOpen] = useState(false)
   const [highlighted, setHighlighted] = useState<MobilePage | null>(null)
@@ -40,35 +33,12 @@ export function MobileRadialNav({ page, onSelect }: MobileRadialNavProps) {
   const startPointRef = useRef({ x: 0, y: 0 })
   const buttonRef = useRef<HTMLButtonElement>(null)
 
-  function updateHighlight(clientX: number, clientY: number) {
-    const button = buttonRef.current
-    if (!button) return
-
-    const bounds = button.getBoundingClientRect()
-    const centerX = bounds.left + bounds.width / 2
-    const centerY = bounds.top + bounds.height / 2
-    const deltaX = clientX - centerX
-    const deltaY = clientY - centerY
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
-
-    if (distance < 28) {
-      setHighlighted(null)
-      return
-    }
-
-    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI)
-    let selected = navItems[0].page
-    let closestDifference = Number.POSITIVE_INFINITY
-
-    navItems.forEach((item, index) => {
-      const difference = angleDifference(angle, -90 + index * angleStep)
-      if (difference < closestDifference) {
-        closestDifference = difference
-        selected = item.page
-      }
-    })
-
-    setHighlighted(selected)
+  function updateHighlight(clientY: number) {
+    const currentIndex = navItems.findIndex(item => item.page === page)
+    const deltaY = clientY - startPointRef.current.y
+    const offset = Math.round(deltaY / 52)
+    const nextIndex = Math.max(0, Math.min(navItems.length - 1, currentIndex + offset))
+    setHighlighted(navItems[nextIndex].page)
   }
 
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
@@ -91,7 +61,7 @@ export function MobileRadialNav({ page, onSelect }: MobileRadialNavProps) {
     )
 
     if (distance > 12) movedRef.current = true
-    updateHighlight(event.clientX, event.clientY)
+    updateHighlight(event.clientY)
   }
 
   function handlePointerUp(event: React.PointerEvent<HTMLDivElement>) {
@@ -127,11 +97,9 @@ export function MobileRadialNav({ page, onSelect }: MobileRadialNavProps) {
       }}
     >
       {open && (
-        <div className="pointer-events-none absolute bottom-7 right-7 h-44 w-44">
+        <div className="absolute bottom-16 right-0 flex max-h-[70vh] w-[148px] justify-center overflow-y-auto p-1">
+          <div className="flex min-h-max w-full flex-col items-stretch gap-1.5">
           {navItems.map((item, index) => {
-            const angle = (-90 + index * angleStep) * (Math.PI / 180)
-            const x = Math.cos(angle) * radius
-            const y = Math.sin(angle) * radius
             const isSelected = highlighted === item.page || (!highlighted && page === item.page)
 
             return (
@@ -144,17 +112,21 @@ export function MobileRadialNav({ page, onSelect }: MobileRadialNavProps) {
                   setOpen(false)
                   setHighlighted(null)
                 }}
-                className={`pointer-events-auto absolute left-1/2 top-1/2 z-10 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border text-[10px] font-bold shadow-xl transition-all duration-150 ${isSelected
-                  ? 'scale-125 border-2 border-orange-100 bg-orange-700 text-white shadow-[0_0_0_5px_rgba(194,65,12,0.38),0_12px_30px_rgba(124,45,18,0.45)] dark:border-orange-200'
-                  : 'border-slate-200 bg-white/95 text-slate-700 dark:border-slate-600 dark:bg-slate-900/95 dark:text-slate-200'
+                className={`vvq-radial-item pointer-events-auto flex h-12 w-full shrink-0 items-center gap-3 rounded-full border border-transparent px-3 text-left text-xs font-bold transition-all duration-150 ${isSelected
+                  ? 'scale-125 bg-orange-700 text-white shadow-[0_12px_30px_rgba(124,45,18,0.45)]'
+                  : 'bg-white text-slate-800 shadow-lg shadow-slate-950/20 dark:bg-slate-800 dark:text-slate-100 dark:shadow-slate-950/40'
                   }`}
-                style={{ transform: `translate(-50%, -50%) translate(${x}px, ${y}px)` }}
+                style={{ animationDelay: `${index * 35}ms` }}
               >
-                <span className="text-base leading-none">{item.icon}</span>
-                <span className="mt-1 max-w-[52px] truncate">{item.shortLabel}</span>
+                <span className={`flex h-8 w-8 shrink-0 aspect-square items-center justify-center rounded-full text-base leading-none ${isSelected
+                  ? 'bg-orange-900/40 text-orange-50'
+                  : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100'
+                  }`}>{item.icon}</span>
+                <span className="truncate">{item.shortLabel}</span>
               </button>
             )
           })}
+          </div>
         </div>
       )}
 
@@ -173,7 +145,7 @@ export function MobileRadialNav({ page, onSelect }: MobileRadialNavProps) {
 
       {open && (
         <p className="pointer-events-none absolute bottom-16 right-0 w-44 text-right text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-          Swipe around the circle, then release
+          Swipe up or down, then release
         </p>
       )}
     </div>

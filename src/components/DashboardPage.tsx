@@ -49,7 +49,7 @@ export function DashboardPage({
     : 0
 
   return (
-    <div className="space-y-5">
+    <div className="vvq-stagger space-y-5">
       <section className="overflow-hidden rounded-[28px] border border-slate-700/80 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-5 text-slate-50 shadow-[0_20px_45px_rgba(2,6,23,0.38)] md:p-6">
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>

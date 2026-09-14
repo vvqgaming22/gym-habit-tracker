@@ -39,7 +39,7 @@ export function RestTimer() {
   const seconds = String(remaining % 60).padStart(2, '0')
 
   return (
-    <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-3 dark:border-cyan-400/20 dark:bg-cyan-400/10">
+    <div className={`rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-3 dark:border-cyan-400/20 dark:bg-cyan-400/10 ${running ? 'vvq-timer-running' : ''}`}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-300">
