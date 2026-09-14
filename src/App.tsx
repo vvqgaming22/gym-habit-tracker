@@ -13,6 +13,7 @@ import { DashboardPage } from './components/DashboardPage'
 import { GymPage, type WorkoutTemplate } from './components/GymPage'
 import { SidebarNav } from './components/SidebarNav'
 import { MobileRadialNav } from './components/MobileRadialNav'
+import { BrandLogo } from './components/BrandLogo'
 
 type Page =
   | 'Dashboard'
@@ -2244,14 +2245,19 @@ function App() {
 
             {/* HEADER */}
             <div className="mb-4 flex items-center justify-between gap-3 sm:mb-6 sm:gap-4">
-              <div>
-                <h1 className="text-xl font-bold sm:text-2xl">
-                  {page}
-                </h1>
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="lg:hidden">
+                  <BrandLogo compact />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="truncate text-xl font-bold tracking-tight sm:text-2xl">
+                    {page}
+                  </h1>
 
-                <p className="text-xs text-slate-500 sm:text-sm dark:text-slate-400">
-                  {formatDate(todayISO())}
-                </p>
+                  <p className="text-xs text-slate-500 sm:text-sm dark:text-slate-400">
+                    {formatDate(todayISO())}
+                  </p>
+                </div>
               </div>
 
               {savedMessage && (

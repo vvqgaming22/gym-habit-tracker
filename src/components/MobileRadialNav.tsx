@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { BrandLogo } from './BrandLogo'
 
 type MobilePage =
   | 'Dashboard'
@@ -35,6 +36,7 @@ export function MobileRadialNav({ page, onSelect }: MobileRadialNavProps) {
   const [open, setOpen] = useState(false)
   const [highlighted, setHighlighted] = useState<MobilePage | null>(null)
   const movedRef = useRef(false)
+  const openedByPointerRef = useRef(false)
   const startPointRef = useRef({ x: 0, y: 0 })
   const buttonRef = useRef<HTMLButtonElement>(null)
 
@@ -70,14 +72,18 @@ export function MobileRadialNav({ page, onSelect }: MobileRadialNavProps) {
   }
 
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    event.preventDefault()
     startPointRef.current = { x: event.clientX, y: event.clientY }
     movedRef.current = false
+    openedByPointerRef.current = !open
     event.currentTarget.setPointerCapture(event.pointerId)
-    setOpen(true)
+    if (!open) setOpen(true)
   }
 
   function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
     if (!open) return
+
+    event.preventDefault()
 
     const distance = Math.hypot(
       event.clientX - startPointRef.current.x,
@@ -99,6 +105,11 @@ export function MobileRadialNav({ page, onSelect }: MobileRadialNavProps) {
   }
 
   function handleButtonClick() {
+    if (openedByPointerRef.current) {
+      openedByPointerRef.current = false
+      return
+    }
+
     if (movedRef.current) return
     setOpen(value => !value)
     setHighlighted(null)
@@ -106,12 +117,12 @@ export function MobileRadialNav({ page, onSelect }: MobileRadialNavProps) {
 
   return (
     <div
-      className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-4 z-50 lg:hidden"
+      className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-4 z-50 select-none touch-none lg:hidden"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={() => {
-        setOpen(false)
+        movedRef.current = false
         setHighlighted(null)
       }}
     >
@@ -133,8 +144,8 @@ export function MobileRadialNav({ page, onSelect }: MobileRadialNavProps) {
                   setOpen(false)
                   setHighlighted(null)
                 }}
-                className={`pointer-events-auto absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border text-[10px] font-bold shadow-xl transition-all ${isSelected
-                  ? 'scale-110 border-cyan-300 bg-cyan-500 text-white shadow-cyan-500/30'
+                className={`pointer-events-auto absolute left-1/2 top-1/2 z-10 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border text-[10px] font-bold shadow-xl transition-all duration-150 ${isSelected
+                  ? 'scale-125 border-2 border-orange-100 bg-orange-700 text-white shadow-[0_0_0_5px_rgba(194,65,12,0.38),0_12px_30px_rgba(124,45,18,0.45)] dark:border-orange-200'
                   : 'border-slate-200 bg-white/95 text-slate-700 dark:border-slate-600 dark:bg-slate-900/95 dark:text-slate-200'
                   }`}
                 style={{ transform: `translate(-50%, -50%) translate(${x}px, ${y}px)` }}
@@ -153,11 +164,11 @@ export function MobileRadialNav({ page, onSelect }: MobileRadialNavProps) {
         onClick={handleButtonClick}
         aria-label={open ? 'Close page navigation' : `Open page navigation, current page ${page}`}
         className={`flex h-14 w-14 items-center justify-center rounded-full border-2 text-xl font-black shadow-2xl transition-all ${open
-          ? 'rotate-45 border-cyan-300 bg-cyan-500 text-white shadow-cyan-500/30'
-          : 'border-slate-900 bg-slate-950 text-cyan-300 shadow-slate-950/30 dark:border-cyan-300 dark:bg-cyan-400 dark:text-slate-950'
+          ? 'rotate-45 border-orange-400 bg-slate-900 text-orange-100 shadow-slate-950/50 dark:border-orange-500 dark:bg-slate-950'
+          : 'border-slate-700 bg-slate-950 text-orange-200 shadow-slate-950/50 dark:border-slate-600 dark:bg-slate-900 dark:text-orange-100'
           }`}
       >
-        {open ? '+' : '☰'}
+        {open ? '+' : <BrandLogo compact />}
       </button>
 
       {open && (

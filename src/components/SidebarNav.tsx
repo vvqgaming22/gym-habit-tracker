@@ -3,6 +3,8 @@ type SidebarNavProps = {
   onSelect: (page: 'Dashboard' | 'Habits' | 'Gym' | 'Calendar' | 'Analytics' | 'Reports' | 'Settings') => void
 }
 
+import { BrandLogo } from './BrandLogo'
+
 const navItems = [
   'Dashboard',
   'Habits',
@@ -18,13 +20,7 @@ export function SidebarNav({ page, onSelect }: SidebarNavProps) {
     <>
       <aside className="hidden w-64 shrink-0 border-r border-slate-200/80 bg-slate-950 p-5 text-slate-100 shadow-[inset_-1px_0_0_rgba(148,163,184,0.12)] transition-colors lg:block dark:border-slate-700 dark:bg-slate-950">
         <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 text-lg font-bold text-slate-950 shadow-lg shadow-cyan-500/20">
-            G
-          </div>
-          <div>
-            <div className="text-lg font-bold text-white">Gym & Habit</div>
-            <div className="text-xs text-slate-400">Tracker</div>
-          </div>
+          <BrandLogo />
         </div>
 
         <nav className="space-y-2">

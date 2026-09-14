@@ -13,9 +13,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
 
       manifest: {
-        name: 'Gym Habit Tracker',
-        short_name: 'Gym Tracker',
-        description: 'Personal Gym & Habit Tracker',
+        name: 'VVQ · Vũ Vinh Quang · Gym Habit Tracker',
+        short_name: 'VQ Tracker',
+        description: 'Vũ Vinh Quang personal gym and habit tracker',
         theme_color: '#0f172a',
         background_color: '#ffffff',
         display: 'standalone',
@@ -25,14 +25,14 @@ export default defineConfig({
         scope: '/gym-habit-tracker/',
         icons: [
           {
-            src: '/pwa-192.png',
+            src: '/vq-logo.svg',
             sizes: '192x192',
-            type: 'image/png',
+            type: 'image/svg+xml',
           },
           {
-            src: '/pwa-512.png',
+            src: '/vq-logo.svg',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/svg+xml',
           },
         ],
       },
